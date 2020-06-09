@@ -1,14 +1,9 @@
-#include <algorithm>
 #include <deque>
-#include <list>
-#include <map>
 #include <string>
 #include <utility>
 #include <iostream>
-#include <iterator>
-#include <vector>
 
-#undef NDEBUG
+#define NDEBUG
 #include <cassert>
 
 static const int MAX_COLOR = 50;
@@ -30,9 +25,8 @@ void add_edge(int a, int b) {
 }
 
 void update_first_adjacent(int src, int old_dst) {
-  if (first_adjacent[src] < old_dst)
+  if (first_adjacent[src] != old_dst)
     return;
-  assert(first_adjacent[src] == old_dst);
 
   first_adjacent[src] = -1;
   for (int i = old_dst+1; i <= MAX_COLOR; ++i) {
