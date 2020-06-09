@@ -1,0 +1,125 @@
+use std::convert::TryInto;
+use std::iter::Iterator;
+use std::iter::repeat;
+use std::vec::Vec;
+
+fn triangle_size(n: u32) -> u32 {
+    return n*(n+1)/2;
+}
+
+fn index_triangle(r: u32, i: u32) -> usize {
+    assert!(1 <= r);
+    assert!(1 <= i && i <= r);
+    let num_above = triangle_size(r-1);
+    return (num_above + i - 1).try_into().expect("overflow");
+}
+
+fn bruteforce_impl(mut labels: Vec<u32>, mut r: u32, mut i: u32, mut next_label: u32) -> Option<Vec<u32>> {
+    // First, base cases only hit on the first call to this function:
+    if r == 1 {
+        assert!(i == 1);
+        // The tip of the triangle and the 2 dots in the row below it must form
+        // a triad, since the tip can't be matched with any other dots. Label
+        // them 1.
+        labels[index_triangle(1, 1)] = 1;
+        labels[index_triangle(2, 1)] = 1;
+        labels[index_triangle(2, 2)] = 1;
+
+        // Prepare for the recursive part of the function.
+        r = 3;
+        i = 1;
+        next_label = 2;
+    }
+
+
+    // Loop invariant:
+    // (1) all positions before row `r` offset `i` are labeled
+    // (2) each existing label is used at most 3 times
+    // (3) all positions of a given label are adjacent
+    // (4) all positions in rows `r-2` and higher have been completely grouped into triads.
+    //
+    // Example for r = 5, i = 2 (where * is unlabeled)
+    //     1
+    //    1 1
+    //   2 2 3
+    //  4 2 3 3
+    // 4 * * * *
+
+    let next = || {
+        i += 1;
+        if i > r {
+            r += 1;
+            i = 1;
+        }
+    };
+
+    while index_triangle(r, i) < cur.len() {
+        if i >= 2 && i <= r-1 {
+            let top_left_label = labels[index_triangle(r-1, i-1)];
+            let top_right_label = labels[index_triangle(r-1, i)];
+            let left_label = labels[index_triangle(r, i-1)];
+
+            if top_left_label == top_right_label && top_left_label != labels[index_triangle(r-2, i-1)] {
+                // ... a ...
+                // .. b b ..
+                // ... * ...
+                //
+                // The two dots above us have the same label and the dot above
+                // them does not. We are the last dot they can join with to make
+                // a triad. Join with them.
+                labels[index_triangle(r, i)] = top_left_label;
+                next();
+                continue;
+            } else if left_label == top_left_label && (i == 3 || left_label != labels[index_triangle(r-1, i-2)]) {
+                // .. a b c ..
+                // ... b * ...
+                //
+                // The dots to our left and top left have the same label, and
+                // they are not joined with the dot diagonal from us. We are the
+                // last dot they can form a triad with, so join them.
+                labels[index_triangle(r, i)] = left_label;
+                next();
+                continue;
+            } else if i == 3 || left_label != labels[index_triangle(r, i-2)] {
+                // .....?.?.?...
+                // ... a b * ...
+                //
+                // The dot to our left has a different label than the one to its left and the ones above it.
+            }
+        }
+    }
+
+
+    // Tries labeling the position at row `r` and offset `i`. We try every
+    // possibility. If all are invalid by the above definition, returns None.
+    // Otherwise, attempts labeling the next unlabeled position in recursive
+    // calls returning the first that works (or None).
+
+    let max_label = triangle_size(cur.len().try_into().unwrap()) / 3;
+
+    // All positions 2 rows above `r` and higher must already be in completed
+    // triads by now. Otherwise, we failed to reject an impossible triangle at the right time.
+}
+
+fn bruteforce(n: u32) -> Option<Vec<u32>> {
+    assert!(n > 0);
+    let init = repeat(0).take((n*(n+1)/2).try_into().expect("overflow")).collect();
+
+    for 
+}
+
+fn main() {
+    println!("Hello, world!");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn indexing() {
+        assert_eq!(index_triangle(1, 1), 0);
+        assert_eq!(index_triangle(2, 1), 1);
+        assert_eq!(index_triangle(2, 2), 2);
+        assert_eq!(index_triangle(4, 3), 8);
+    }
+}
