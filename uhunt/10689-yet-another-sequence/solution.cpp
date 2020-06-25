@@ -1,43 +1,42 @@
+#include <cassert>
 #include <cstdio>
-#include <unordered_map>
 
 static unsigned int a, b;
 static unsigned int mod;
 
-static std::unordered_map<unsigned int, unsigned int> memo;
+// [ w x ]
+// [ y z ]
+struct mat {
+  unsigned int w, x, y, z;
+};
 
-unsigned int compute(unsigned int n) {
-  if (n == 0)
-    return a;
-  else if (n == 1)
-    return b;
-  else if (n == 2)
-    return a+b;
-
-  auto it = memo.find(n);
-  if (it != memo.end())
-    return it->second;
-
-  unsigned int result;
-  if (n % 2) {
-    unsigned int x = (n+1)/2;
-    unsigned int prev_1 = compute(x);
-    unsigned int prev_2 = compute(x-1);
-    result = (prev_1*prev_1 + prev_2*prev_2) % mod;
-  } else {
-    unsigned int x = n/2;
-    unsigned int prev_1 = compute(x);
-    unsigned int prev_2 = compute(x-1);
-    result = (prev_1 * (prev_1 + 2*prev_2)) % mod;
-  }
-
-  memo[n] = result;
+static mat prod(const mat& A, const mat& B) {
+  mat result;
+  result.w = (A.w*B.w + A.x*B.y) % mod;
+  result.x = (A.w*B.x + A.x*B.z) % mod;
+  result.y = (A.y*B.w + A.z*B.y) % mod;
+  result.z = (A.y*B.x + A.z*B.z) % mod;
   return result;
+}
+
+static mat power(const mat& A, unsigned int n) {
+  assert(n != 0);
+  if (n == 1)
+    return A;
+
+  mat B = power(A, n/2);
+  B = prod(B, B);
+  if (n%2)
+    return prod(B, A);
+  else
+    return B;
 }
 
 int main() {
   unsigned int garbage;
   std::scanf("%u", &garbage);
+
+  const mat A = {1, 1, 1, 0};
 
   unsigned int n, m;
   while (std::scanf(" %u %u %u %u", &a, &b, &n, &m) == 4) {
@@ -50,7 +49,18 @@ int main() {
     else
       mod = 10000;
 
-    memo.clear();
-    std::printf("%u\n", compute(n));
+    unsigned int result;
+    if (n == 0) {
+      result = a % mod;
+    } else if (n == 1) {
+      result = b % mod;
+    } else if (n == 2) {
+      result = (b+a) % mod;
+    } else {
+      const mat B = power(A, n);
+      result = (B.y*b + B.z*a) % mod;
+    }
+
+    std::printf("%u\n", result);
   }
 }
